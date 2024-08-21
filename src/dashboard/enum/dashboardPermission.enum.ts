@@ -1,0 +1,7 @@
+enum DashboardPermission {
+	LER_DASHBOARD = 'LER_DASHBOARD',
+	LER_DASHBOARD_USUARIO = 'LER_DASHBOARD_USUARIO',
+	MODIFICAR_DASHBOARD = 'MODIFICAR_DASHBOARD',
+}
+   
+export default DashboardPermission;
