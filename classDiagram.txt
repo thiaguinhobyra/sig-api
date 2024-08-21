@@ -1,0 +1,106 @@
+classDiagram
+  class Usuario {
+    - id: number
+    - idPublic: string
+    - nome: string
+    - email: string
+    - senha: string
+    - redefinirSenha: string
+    - fk_perfil: number
+    - fk_setor: number
+    - ativo: boolean
+    + create(crateUsuario: CreateUsuarioDto)
+    + findOne(idPublic: string): Usuario
+    + findAll(idPublicSetor: string): Usuario[]
+    + update(idPublic: string): Usuario
+    + delete(idPublic: string): null
+  }
+
+  class Perfil {
+    - id: number
+    - idPublic: string
+    - nome: string
+    - ativo: boolean
+    + create(cratePerfil: CreatePerfilDto)
+    + findOne(idPublic: string): Perfil
+    + findAll(idPublicSetor: string): Perfil[]
+    + update(idPublic: string): Perfil
+    + delete(idPublic: string): null
+  }
+
+  class PerfilPermission {
+    - perfilId: number
+    - permissionId: number
+  }
+
+  class Permission {
+    - id: number
+    - idPublic: string
+    - nome: string
+    - descricao: string
+    - ativo: boolean
+    + create(cratePermission: CreatePermissionDto)
+    + findOne(idPublic: string): Permission
+    + findAll(idPublicSetor: string): Permission[]
+    + update(idPublic: string): Permission
+    + delete(idPublic: string): null
+  }
+
+  class Setor {
+    - id: number
+    - idPublic: string
+    - nome: string
+    - sigla: string
+    - ativo: boolean
+    - fk_orgao: number
+    + create(crateSetor: CreateSetorDto)
+    + findOne(idPublic: string): Setor
+    + findAll(idPublicSetor: string): Setor[]
+    + update(idPublic: string): Setor
+    + delete(idPublic: string): null
+  }
+
+  class Orgao {
+    - id: number
+    - idPublic: string
+    - nome: string
+    - sigla: string
+    - ativo: boolean
+    + create(crateOrgao: CreateOrgaoDto)
+    + findOne(idPublic: string): Orgao
+    + findAll(idPublicOrgao: string): Orgao[]
+    + update(idPublic: string): Orgao
+    + delete(idPublic: string): null
+  }
+
+  class Dashboard {
+    - id: number
+    - idPublic: string
+    - nome: string
+    - icone: string
+    - url: string
+    - ativo: boolean
+    - fk_perfil: number[]
+    + create(crateDashboard: CreateDashboardDto)
+    + findOne(idPublic: string): Dashboard
+    + findAll(idPublicDashboard: string): Dashboard[]
+    + update(idPublic: string): Dashboard
+    + delete(idPublic: string): null
+  }
+
+  class DashboardPerfil {
+    - perfilId: number
+    - dashboardId: number
+  }
+    
+  Usuario --> Perfil: Contém
+  Perfil --> Permission: Contém
+  Usuario --> Setor: Contém
+  Setor --> Orgao: Contém
+  Perfil --> Dashboard: Contém
+  Setor --> Dashboard: Contém
+  Setor --> Orgao: Contém
+  DashboardPerfil --> Perfil: Possui_Perfil
+  DashboardPerfil --> Dashboard: Possui_Dashboard
+  PerfilPermission --> Perfil: Possui_Perfil
+  PerfilPermission --> Permission: Possui_Permission
