@@ -1,0 +1,5 @@
+export enum keyAuxiliarEnum {
+    STATUS_REGISTRO = "STATUS_REGISTRO",
+    TIPO_REGISTRO = "TIPO_REGISTRO",
+    EMPRESA = 'EMPRESA',
+}
