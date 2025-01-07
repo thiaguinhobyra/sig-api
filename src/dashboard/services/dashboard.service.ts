@@ -13,6 +13,9 @@ import { Usuario } from 'src/usuarios/entities/usuario.entity';
 import { PerfilEnum } from 'src/perfil/enums/perfilEnum.enum';
 import { GetDashboardDto } from '../dto/get-dashboard.dto';
 import { Orgao } from 'src/orgao/entities/orgao.entity';
+import { GetDashsDto } from '../dto/get-dashs.dto';
+import { Relatorio } from 'src/relatorio/entities/relatorio.entity';
+import { Auxiliar } from 'src/auxiliar/entities/auxiliar.entity';
 
 @Injectable()
 export class DashboardService {
@@ -173,6 +176,82 @@ export class DashboardService {
     } catch (error) {
       // Retorna mensagem de erro
       throw new HttpException({ message: 'Não foi possível listar Dashboards para home.', code: error?.code, erro: error }, HttpStatus.NOT_FOUND)
+    }
+  }
+
+  async findAllAdmin(userToken: IdDto) {
+    try {
+      const dataInicio = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const dataFim = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+      let dashboard: GetDashsDto = new GetDashsDto();
+
+      const usuario = await this.dataSource.getRepository(Usuario).findOne({
+        relations: {
+          perfil: true,
+          setor: {
+            orgao: true
+          },
+        },
+        where: {
+          id: userToken.id
+        }
+      })
+
+      if (!usuario) {
+        throw 'Não foi encontrado usuário com esta identificação.';
+      }
+
+      let usuarioAdmin: any = usuario.perfil
+
+      if (usuarioAdmin.nome == PerfilEnum.Admin) {
+        usuarioAdmin = usuario.perfil.id
+        
+        const usuarioPerfil = await this.dataSource.getRepository(Perfil).findOne({
+          where: {
+            nome: PerfilEnum.Usuario
+          }
+        })
+
+        const usuarioColaborador: number | null = usuarioPerfil ? usuarioPerfil.id : null;
+
+        const preDashboard = await this.dataSource.createQueryBuilder()
+          .select(["Count(relatorio.id) as tarefas, Sum(relatorio.valor_tarefa) as valor, Sum(relatorio.horas::INTERVAL) as horas"])
+          .from(Relatorio, "relatorio")
+          .innerJoin(Auxiliar, 'status', 'relatorio.fk_status  = status.id')
+          .where("relatorio.data_fechamento Between :dataInicio AND :dataFim", { dataInicio, dataFim })
+          .addSelect((subQuery) => {
+            return subQuery
+              .select("Count(u.id)", "usuarios")
+              .from(Usuario, "u")
+              .where("u.ativo = true AND u.fk_perfil = :usuarioAdmin", { usuarioAdmin })
+          }, "usuarios")
+          .addSelect((subQuery) => {
+            return subQuery
+              .select("Count(u2.id)", "colaboradores")
+              .from(Usuario, "u2")
+              .where("u2.ativo = true AND u2.fk_perfil = :usuarioColaborador", { usuarioColaborador })
+          }, "colaboradores")
+          .getRawOne()
+
+        dashboard.colaboradores = Number(preDashboard.colaboradores);
+        dashboard.usuariosCadastrados = Number(preDashboard.usuarios);
+        dashboard.tarefasMes = Number(preDashboard.tarefas);
+        dashboard.horasMes = Number(preDashboard.horas);
+        dashboard.valorTarefasMes = Number(preDashboard.valor);
+        dashboard.valorMediaTarefas = dashboard.tarefasMes ? Number(Number(dashboard.valorTarefasMes) / Number(dashboard.tarefasMes)) : 0;
+        // dashboard.TarefasAbertasMes = Number(preDashboard.TarefasAbertasMes);
+        // dashboard.TarefasCanceladasMes = Number(preDashboard.TarefasCanceladasMes);
+        // dashboard.TarefasFinalizadasMes = Number(preDashboard.TarefasFinalizadasMes);
+        // dashboard.TarefasPendentesMes = Number(preDashboard.TarefasPendentesMes);
+
+        console.log('colaboradores', dashboard.colaboradores, 'usuariosCadastrados', dashboard.usuariosCadastrados, 'tarefasMes', dashboard.tarefasMes, 'horasMes', dashboard.horasMes, 'valorTarefasMes', dashboard.valorTarefasMes, 'valorMediaTarefas', dashboard.valorMediaTarefas);
+        
+      }
+
+      return new ResponseGeneric<GetDashsDto>(dashboard);
+    } catch (error) {
+      console.error(error);
+      throw new HttpException({ message: 'Não foi possível listar o dashboard. ', code: error?.code, erro: error }, HttpStatus.NOT_FOUND);
     }
   }
 

@@ -43,6 +43,12 @@ export class DashboardController {
     return await this.dashboardService.findAllDashboardHome(idPublic, page, size, userToken);
   }
 
+  @Get('dashs/admin')
+  @UseGuards(PermissionGuard(DashboardPermission.LER_DASHBOARD))
+  async findAllAdmin(@Body('userToken') userToken: IdDto) {
+    return await this.dashboardService.findAllAdmin(userToken);
+  }
+
   // TODO: implementar perfil/:paramenter para todos os perfis, admin, gestor e usuario no service
   @Get('admin/:parameter?')
   // Verifica autenticidade do token informado e se o usuário tem permissão para realizar a ação
